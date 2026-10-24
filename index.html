@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>六轴工业机械臂 · 3D 分阶段拆解展示</title>
+  <link rel="icon" href="data:," />
+</head>
+<body>
+  <div id="app">
+    <header id="topbar">
+      <div class="brand">
+        <span class="brand-mark"></span>
+        <div class="brand-text">
+          <h1 class="brand-title">六轴工业机械臂</h1>
+          <p class="brand-sub">6-AXIS INDUSTRIAL ROBOT ARM · STAGED EXPLODED VIEW</p>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <button id="btn-explode" class="btn btn-primary">
+          <svg viewBox="0 0 24 24"><path d="M12 3v6M12 15v6M3 12h6M15 12h6"/><path d="M12 9l-3-3M12 9l3-3M12 15l-3 3M12 15l3 3"/></svg>
+          <span>一键拆解</span>
+        </button>
+        <button id="btn-assemble" class="btn" disabled>
+          <svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/><path d="M12 9l3-3M12 9l-3-3M12 15l3 3M12 15l-3 3"/></svg>
+          <span>一键复原</span>
+        </button>
+        <button id="btn-spin" class="btn ghost" title="自动旋转">
+          <svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v4h-4"/></svg>
+          <span>旋转</span>
+        </button>
+        <button id="btn-reset" class="btn ghost" title="重置视角">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          <span>复位</span>
+        </button>
+      </div>
+
+      <div class="top-status">
+        <div class="stat"><span class="stat-k">状态</span><span class="stat-v" id="st-state">组装态</span></div>
+        <div class="stat"><span class="stat-k">部件</span><span class="stat-v" id="st-count">—</span></div>
+        <div class="stat"><span class="stat-k">拆解进度</span><span class="stat-v" id="st-progress">0%</span>
+          <span class="mini-bar"><i id="st-progress-bar"></i></span>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <aside id="sidebar">
+        <div class="panel-head">
+          <span class="panel-title">部件清单</span>
+          <span class="panel-sub" id="part-count"></span>
+        </div>
+        <div class="search">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg>
+          <input id="part-filter" type="text" placeholder="搜索部件名称 / 用途" />
+        </div>
+        <div id="part-list"></div>
+        <div class="panel-foot">
+          <p class="hint">点击部件可在 3D 视图中高亮定位，右侧查看详细用途与规格。</p>
+          <button id="btn-select-all" class="btn ghost tiny">高亮全部部件</button>
+        </div>
+      </aside>
+
+      <section id="viewport">
+        <canvas id="scene"></canvas>
+        <svg id="leader-layer"></svg>
+        <div id="label-layer"></div>
+        <div id="view-hints">
+          <span><b>左键拖拽</b> 旋转</span>
+          <span><b>滚轮</b> 缩放</span>
+          <span><b>右键拖拽</b> 平移</span>
+          <span><b>点击部件</b> 选中</span>
+        </div>
+        <div id="loading"><div class="ld-ring"></div><div class="ld-text">正在生成模型…</div></div>
+        <div id="fatal" hidden>
+          <div class="fatal-title">初始化失败</div>
+          <div class="fatal-detail"></div>
+        </div>
+      </section>
+
+      <aside id="detail">
+        <div class="panel-head">
+          <span class="panel-title">部件详情</span>
+          <span class="panel-sub" id="d-hint">未选中</span>
+        </div>
+        <div class="d-body">
+          <div class="d-empty">
+            <div class="d-empty-icon"></div>
+            <p class="d-empty-title">点击 3D 视图或左侧清单中的部件</p>
+            <p class="d-empty-sub">查看该部件的名称、用途与关键规格</p>
+          </div>
+          <div class="d-card" hidden>
+            <div class="d-head">
+              <span class="d-dot"></span>
+              <div class="d-head-main">
+                <h2 class="d-name"></h2>
+                <p class="d-short"></p>
+              </div>
+              <span class="d-idx"></span>
+            </div>
+            <div class="d-tags"><span class="d-group"></span><span class="d-axis"></span></div>
+            <div class="d-block">
+              <h3>用途</h3>
+              <p class="d-use"></p>
+            </div>
+            <div class="d-block">
+              <h3>结构说明</h3>
+              <p class="d-desc"></p>
+            </div>
+            <div class="d-block">
+              <h3>关键规格</h3>
+              <dl class="d-specs"></dl>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <section id="controlbar">
+      <div class="cb-left">
+        <span class="cb-label">拆解进度</span>
+        <input id="progress" type="range" min="0" max="100" step="1" value="0" />
+        <span class="cb-value" id="cb-value">0%</span>
+      </div>
+      <div class="cb-steps">
+        <button id="btn-prev" class="btn tiny ghost" title="单步复原">
+          <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span>单步复原</span>
+        </button>
+        <button id="btn-next" class="btn tiny" title="单步拆解">
+          <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg><span>单步拆解</span>
+        </button>
+        <div class="cb-stages" id="cb-stages"></div>
+      </div>
+      <div class="cb-right">
+        <span class="cb-stage-text" id="cb-stage-text">阶段 0 / 6 · 组装态</span>
+      </div>
+    </section>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
